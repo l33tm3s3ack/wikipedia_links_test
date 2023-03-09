@@ -4,8 +4,6 @@ import requests
 import wikipediaapi
 from bs4 import BeautifulSoup
 
-max_clicks = 3
-
 
 def search(start, end):
     """BFS search"""
@@ -30,9 +28,21 @@ def search(start, end):
                 queue.append(new_path)
                 if neighbour == end:
                     return new_path
+            explored.append(node)
 
     print('Cant find route')
     return
+
+
+def sentence_search(current_link, searched_title):
+    page = requests.get(current_link)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    parent_text = soup.find('a', title=searched_title).parent.parent.text
+    sentences = re.split('[.?!\n] ?', parent_text)
+    word = soup.find('a', title=searched_title).text
+    sentence = [s for s in sentences if word in s]
+    return sentence[0]
+
 
 
 def run(start_link, end_link):
@@ -45,22 +55,17 @@ def run(start_link, end_link):
     title_end_link = title_end_link.replace('_', ' ')
 
     path = search(title_start_link, title_end_link)
-    link_path = [wiki.page(link).fullurl for link in path]
+    if path is None:
+        return
+    link_path = [wiki.page(title).fullurl for title in path]
     for i in range(1, len(link_path)):
-        current_page = link_path[i-1]
-        searched_page = path[i]
-        page = requests.get(current_page)
-        soup = BeautifulSoup(page.content, 'html.parser')
-        parent_text = soup.find('a', title=searched_page).parent.parent.text
-        sentences = re.split('[.?!\n] ?', parent_text)
-        word = soup.find('a', title=searched_page).text
-        sentence = [s for s in sentences if word in s]
-
-        print(sentence[0])
+        current_link = link_path[i-1]
+        searched_title = path[i]
+        print(sentence_search(current_link, searched_title))
         print(link_path[i])
 
 
 if __name__ == '__main__':
-    start_link = input()
-    end_link = input()
+    start_link = input('Start link: ')
+    end_link = input('End link: ')
     run(start_link, end_link)
