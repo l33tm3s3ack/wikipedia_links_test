@@ -44,7 +44,6 @@ def sentence_search(current_link, searched_title):
     return sentence[0]
 
 
-
 def run(start_link, end_link):
     wiki = wikipediaapi.Wikipedia('ru')
     slashes_start_link = [x for x, v in enumerate(start_link) if v == '/']
